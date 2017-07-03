@@ -13,7 +13,7 @@ describe('MessageParser', function() {
     });
 
     describe('parseTopic', function() {
-        
+
         it("should ignore empty message", () => {
             var r = parser.parseTopic(0, "");
             assert.isNull(r);
@@ -22,35 +22,35 @@ describe('MessageParser', function() {
         it('should skip / at begin', () => {
             var r1 = parser.parseTopic(0, "/m1/m2");
             var r2 = parser.parseTopic(0, "m1/m2");
-            
+
             assert.deepEqual(r1, r2);
         });
 
         it('should skip / at the end', () => {
             var r1 = parser.parseTopic(0, "m1/m2/");
             var r2 = parser.parseTopic(0, "m1/m2");
-            
+
             assert.deepEqual(r1, r2);
         });
 
         it('should trim spaces', () => {
             var r1 = parser.parseTopic(0, " /m1/m2/ ");
             var r2 = parser.parseTopic(0, "m1/m2");
-            
+
             assert.deepEqual(r1, r2);
         });
 
         it('should get measurement name', () => {
             var r1 = parser.parseTopic(0, "m1");
             assert.equal(r1.measurement, "m1");
-            
+
             var r2 = parser.parseTopic(0, "m1/m2");
-            assert.equal(r2.measurement, "m1"); 
+            assert.equal(r2.measurement, "m1");
         });
 
         it('should get topic as tag', () => {
             var r = parser.parseTopic(0, "m1/a/b/c/d");
-            assert.equal(r.tags.topic, "m1/a/b/c/d"); 
+            assert.equal(r.tags.topic, "m1/a/b/c/d");
         });
 
         it('should get topic parts as tags', () => {
@@ -58,7 +58,7 @@ describe('MessageParser', function() {
 
             var separator = "tp"
             assert.equal(r.tags[separator + 0], "m1", separator + 0);
-            assert.equal(r.tags[separator + 1], "a", separator + 1); 
+            assert.equal(r.tags[separator + 1], "a", separator + 1);
             assert.equal(r.tags[separator + 2], "b", separator + 2);
             assert.equal(r.tags[separator + 3], "c", separator + 3);
             assert.equal(r.tags[separator + 4], "d", separator + 4);
@@ -214,6 +214,124 @@ describe('MessageParser', function() {
             });
 
         });
+
+
+        describe("mapFields mode", () => {
+
+            before(() => {
+                parser = new MessageParser({mode: "mapFields"});
+            });
+
+            it("should mapFields of a simple object", () => {
+                var p = parser.parsePayload(0, {"field" : "123" });
+                assert.deepEqual(p, {"field" : "123"});
+            });
+
+            it("should mapFields of a nested object without arrays", () => {
+                var p = parser.parsePayload(0, {"field" : { "attrA": "123", "attrB": "321" } });
+                assert.deepEqual(p, {"field.attrA": "123", "field.attrB": "321" } );
+            });
+
+            it("should mapFields of a simple object with arrays", () => {
+              var p = parser.parsePayload(0, {"field" : ["123", "321"] });
+              assert.deepEqual(p, {"field" : ["123", "321"] });
+            });
+
+            it("should mapFields of a simple object with array of objects", () => {
+              var p = parser.parsePayload(0, {"field" : [{"attrA": "123", "attrB": "111"}, {"attrA": "321", "attrB": "222"}] });
+              assert.deepEqual(p, [ { "field.attrA": "123", "field.attrB": "111" }, { "field.attrA": "321", "field.attrB": "222" } ]);
+            });
+
+            it("should mapFields of a more complex object with array of objects", () => {
+              var p = parser.parsePayload(0, {"fieldAlpha": { "gama": "000", "beta": "999"}, "field" : [{"attrA": "123", "attrB": "111"}, {"attrA": "321", "attrB": "222"}] });
+              assert.deepEqual(p, [
+                { "fieldAlpha.gama": "000", "fieldAlpha.beta": "999", "field.attrA": "123", "field.attrB": "111" },
+                { "fieldAlpha.gama": "000", "fieldAlpha.beta": "999", "field.attrA": "321", "field.attrB": "222" }
+              ]);
+            });
+
+            it("should mapFields of a more complex object with array of objects", () => {
+              var p = parser.parsePayload(0, { "user": {"name":"NILSON-JUNIOR\\nilso"},"machine": {"name":"NILSON-JUNIOR","ip":"192.168.0.14","mac":"025041000001"},"analysis":{"timestamp":"27/06/2017 21:02:39","processes": [{"name": "Calculadora","isActive": "false"},{"name": "Visualizador de Eventos","isActive": "false"},{"name": "IoT Dashboard","isActive": "false"},{"name": "Gerenciador de Tarefas","isActive": "false"},{"name": "Programas e Recursos","isActive": "false"},{"name": "Natalia Silveira Kawatoko","isActive": "false"},{"name": "visual studio - Run exe after msi installation? - Stack Overflow - Google Chrome","isActive": "true"},{"name": "Caixa de entrada - nilsonsrjunior@gmail.com - Outlook","isActive": "false"},{"name": "CoffeeBlamer - Microsoft Visual Studio (Administrator)","isActive": "false"},{"name": "Skype?? - nilson_soares_20@hotmail.com","isActive": "false"},{"name": "Twitter","isActive": "false"}]} });
+              assert.deepEqual(p, [ { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Calculadora',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Visualizador de Eventos',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'IoT Dashboard',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Gerenciador de Tarefas',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Programas e Recursos',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Natalia Silveira Kawatoko',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'visual studio - Run exe after msi installation? - Stack Overflow - Google Chrome',
+                                      'analysis.processes.isActive': 'true' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Caixa de entrada - nilsonsrjunior@gmail.com - Outlook',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'CoffeeBlamer - Microsoft Visual Studio (Administrator)',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Skype?? - nilson_soares_20@hotmail.com',
+                                      'analysis.processes.isActive': 'false' },
+                                    { 'user.name': 'NILSON-JUNIOR\\nilso',
+                                      'machine.name': 'NILSON-JUNIOR',
+                                      'machine.ip': '192.168.0.14',
+                                      'machine.mac': '025041000001',
+                                      'analysis.timestamp': '27/06/2017 21:02:39',
+                                      'analysis.processes.name': 'Twitter',
+                                      'analysis.processes.isActive': 'false' } ])
+            });
+
+        });
     });
 
     describe('parse', () => {
@@ -239,6 +357,3 @@ describe('MessageParser', function() {
         });
     });
 });
-
-
-
