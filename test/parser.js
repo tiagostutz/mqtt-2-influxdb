@@ -250,6 +250,11 @@ describe('MessageParser', function() {
               ]);
             });
 
+            // it("should mapFields of a more complex object with array of objects", () => {
+            //   var p = parser.parsePayload(0, {"fieldAlpha": { "gama": "000", "beta": "999"}, "field" : [{"attrA": "123", "attrB": [ {"teste1":"111", "teste2":"111"} ], "attrC": {"attrCteste1": [{"p1":"9911"},{"p2":"lop111"}] } }, {"attrA": "321", "attrB": "222"}] });
+            //   console.log(p);
+            // });
+
             it("should mapFields of a more complex object with array of objects", () => {
               var p = parser.parsePayload(0, { "user": {"name":"NILSON-JUNIOR\\nilso"},"machine": {"name":"NILSON-JUNIOR","ip":"192.168.0.14","mac":"025041000001"},"analysis":{"timestamp":"27/06/2017 21:02:39","processes": [{"name": "Calculadora","isActive": "false"},{"name": "Visualizador de Eventos","isActive": "false"},{"name": "IoT Dashboard","isActive": "false"},{"name": "Gerenciador de Tarefas","isActive": "false"},{"name": "Programas e Recursos","isActive": "false"},{"name": "Natalia Silveira Kawatoko","isActive": "false"},{"name": "visual studio - Run exe after msi installation? - Stack Overflow - Google Chrome","isActive": "true"},{"name": "Caixa de entrada - nilsonsrjunior@gmail.com - Outlook","isActive": "false"},{"name": "CoffeeBlamer - Microsoft Visual Studio (Administrator)","isActive": "false"},{"name": "Skype?? - nilson_soares_20@hotmail.com","isActive": "false"},{"name": "Twitter","isActive": "false"}]} });
               assert.deepEqual(p, [ { 'user.name': 'NILSON-JUNIOR\\nilso',

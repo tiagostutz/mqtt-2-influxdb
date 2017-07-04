@@ -27,7 +27,7 @@ const configFile = path.resolve(process.cwd(), nconf.get("config"));
 
 // check if config is accessible
 fs.accessSync(configFile, fs.R_OK);
-    
+
 log.info("Config file: ", configFile);
 
 nconf.file({ file: configFile, format: nconf.formats.ini });
